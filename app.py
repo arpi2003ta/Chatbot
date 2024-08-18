@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, jsonify
+from booking_api.api import get_hotel_availability
+from payment.process import process_payment, handle_payment_error
 
 app = Flask(__name__)
 
@@ -6,15 +8,26 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-@app.route('/chat', methods=['POST'])
-def chat():
+# Hotel booking route
+@app.route('/search', methods=['POST'])
+def search():
     data = request.get_json()
-    user_message = data.get('message')
+    city = data.get('city')
+    check_in = data.get('check_in')
+    check_out = data.get('check_out')
+    response = get_hotel_availability(city, check_in, check_out)
+    return jsonify(response)
 
-    # Simulate a chatbot response
-    chatbot_response = f" {user_message}"
-
-    return jsonify({'reply': chatbot_response})
+# Payment processing route
+@app.route('/pay', methods=['POST'])
+def pay():
+    payment_data = request.get_json()
+    try:
+        payment_response = process_payment(payment_data)
+        return jsonify(payment_response)
+    except Exception as e:
+        error_response = handle_payment_error(e)
+        return jsonify(error_response), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
