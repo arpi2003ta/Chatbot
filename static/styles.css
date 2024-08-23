@@ -39,6 +39,7 @@ body {
 .input-container {
     display: flex;
     margin-top: 10px;
+    gap: 10px; /* Add this line to provide a gap between buttons */
 }
 
 textarea {

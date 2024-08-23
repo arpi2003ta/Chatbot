@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from booking_api.api import get_hotel_availability
 from payment.process import process_payment, handle_payment_error
+from voice.stt import convert_speech_to_text
 
 app = Flask(__name__)
 
@@ -8,7 +9,28 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-# Hotel booking route
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.get_json()
+    message = data.get('message')
+    
+    # You can include logic here to handle different intents
+    response = {'reply': f'You said: {message}'}
+    return jsonify(response)
+
+@app.route('/voice', methods=['POST'])
+def voice():
+    audio_file = request.files['audio']
+    text = convert_speech_to_text(audio_file.read())
+
+    if text:
+        response = {'message': text}
+    else:
+        response = {'message': 'Sorry, I could not understand that.'}
+
+    return jsonify(response)
+
+# Hotel booking and payment processing routes
 @app.route('/search', methods=['POST'])
 def search():
     data = request.get_json()
@@ -18,7 +40,6 @@ def search():
     response = get_hotel_availability(city, check_in, check_out)
     return jsonify(response)
 
-# Payment processing route
 @app.route('/pay', methods=['POST'])
 def pay():
     payment_data = request.get_json()
